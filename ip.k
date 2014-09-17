@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.1.10
+#$version$:0.1.12
 # Description : fix bug
 ########################################################################
 KTAG=".k"
@@ -103,12 +103,26 @@ _k_ip_network() {
 }
 
 _k_ip_netmask2bit() {
-    local netmask ip network_arr
+    local netmask ip network_arr btable bt pfix
+    btable=(0 128 192 224 240 248 252 254 255)
+    pfix=0
     netmask=$1
     [ -n "$netmask" ] || return 1
     _k_is_ip $netmask || return 1
-    bit_count=$(echo $netmask  | sed -e "s/\./ /g" -e "s/0//g" | wc -w)
-    echo $(($bit_count * 8 ))
+    for mask in $(echo $netmask | sed "s/\./ /g"); do
+        bt=none
+        for ((ii=0; ii<${#btable[*]}; ii++)); do
+            if [ "$mask" == "${btable[$ii]}" ]; then
+                bt=$ii
+                break
+            fi
+        done
+        [ "$bt" == "none" ] && return 1
+        pfix=$(( $pfix + $bt ))
+    done
+    echo $pfix
+#    bit_count=$(echo $netmask  | sed -e "s/\./ /g" -e "s/0//g" | wc -w)
+#    echo $(($bit_count * 8 ))
     return 0
 }
 
