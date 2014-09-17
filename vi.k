@@ -5,7 +5,7 @@
 # Description : 
 ########################################################################
 KTAG=".k"
-KTMP=".k_tmp"
+KTMP="../.k_tmp"
 # _k_  : Kage function
 # _kv_  : Kage variable
 #include k.k
