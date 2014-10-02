@@ -36,6 +36,13 @@ _k_dev_used() {
     return 1
 }
 
+_k_dev_block_type() {
+    local dev
+    dev=$1
+    [ -b $dev ] || return 1
+    file -s $(readlink -f $dev)
+}
+
 # IF run a shell then run a shell. if load the shell then not running shell. just load
 if [ "$(basename $0)" == "dev.k" ]; then
     declare -F _k_k >& /dev/null || source $_K_BIN/k.k
