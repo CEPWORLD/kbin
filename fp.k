@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.4.16
+#$version$:0.4.17
 # Description : Fingerprint
 ########################################################################
 KTAG=".k"
@@ -26,14 +26,14 @@ _k_fp_rm() {
    dest=$2
    
    if [ "$force" == "1" ]; then 
-       rm $opt "$file" && echo "  rm : $file"
+       rm $opt "$file" && echo "  rm $opt : $file"
    else
        if [ -n "$dest" ] ; then
            [ -d "$dest" ] || error_exit "$dest not found"
            mv "$file" $dest && echo "  move $file to $dest"
        else
-           [ -d ~/.trash ] || mkdir -p ~/.trash
-           mv "$file" ~/.trash && echo "  move $file to ~/.trash"
+           [ -d ~/.Trash ] || mkdir -p ~/.Trash
+           mv "$file" ~/.Trash && echo "  move $file to ~/.Trash"
        fi
    fi
 }
