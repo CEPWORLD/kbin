@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.1.1
+#$version$:0.1.2
 # Created at Sat May 31 12:02:44 CDT 2014
 # Description : 
 ########################################################################
@@ -20,6 +20,12 @@ _k_pogo_help() {
 $(basename $0) [<opt> [<input>] ]
 
   --help : help
+  -dp <dest path> : define <dest path> ( default : ~/photostream )
+  -sp <src path>  : define <src path> ( default : current directory )
+  --check         : check <source file> in <dest path>
+  --copy          : copy <source file> to <dest path>
+  --move          : move <source file> to <dest path> (default)
+  << still working >>
   "
   exit 1
 }
@@ -43,10 +49,20 @@ _k_pogo() {
    declare -F ${FUNCNAME}_${cmd} >& /dev/null && shift 1
 
    opt=("$@")
+
+   dest_path=$(_k_opt -dp 1 0 "${opt[@]}")
+   [ -n "$dest_path" ] || dest_path=~/photostream
+   src_path=$(_k_opt -sp 1 0 "${opt[@]}")
+   [ -n "$src_path" ] || src_path=$(pwd)
+
    if _k_opt --help 0 0 "${opt[@]}" >/dev/null; then
        _k_pogo_help
-#   elif get_val=$(_k_opt -t 1 0 "${opt[@]}"); then
-#      _k_pogo_sample $get_val || return 1
+   elif _k_opt --move 1 0 "${opt[@]}" >/dev/null; then
+      _k_pogo_move "$src_path" "$dest_path" || return 1
+   elif _k_opt --copy 0 0 "${opt[@]}" >& /dev/null; then
+      _k_pogo_copy "$src_path" "$dest_path" || return 1
+   elif _k_opt --check 0 0 "${opt[@]}" >& /dev/null ; then
+      _k_pogo_check "$src_path" "$dest_path" || return 1
 #or
 #   elif _k_opt -t 2 0 "${opt[@]}" >& /dev/null; then
 #      _k_pogo_sample "${opt_out[@]}" || return 1

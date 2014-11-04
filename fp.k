@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.4.15
+#$version$:0.4.16
 # Description : Fingerprint
 ########################################################################
 KTAG=".k"
@@ -13,6 +13,29 @@ KTAG=".k"
 error_exit() {
     echo "$*"
     exit 1
+}
+
+_k_fp_rm() {
+   local opt file dest force
+   if echo $1 | grep -e "^-f " -e "^-fr" >& /dev/null; then
+       opt=$1
+       force=1
+       shift 1
+   fi
+   file=$1
+   dest=$2
+   
+   if [ "$force" == "1" ]; then 
+       rm $opt "$file" && echo "  rm : $file"
+   else
+       if [ -n "$dest" ] ; then
+           [ -d "$dest" ] || error_exit "$dest not found"
+           mv "$file" $dest && echo "  move $file to $dest"
+       else
+           [ -d ~/.trash ] || mkdir -p ~/.trash
+           mv "$file" ~/.trash && echo "  move $file to ~/.trash"
+       fi
+   fi
 }
 
 _k_fprint_history() {
@@ -55,7 +78,7 @@ _k_fprint_md5_ctl() {
          done
          [ "$(stat -f "%z" "$md5path/info.txt")" == "0" ] && rm -fr "$md5path"
        else
-         rm -fr "$md5patah" 
+         rm -fr "$md5path" 
        fi
        return 0
    elif [ "$md5_cmd" == "fix" ]; then
@@ -88,7 +111,7 @@ _k_fprint_rm() {
 
    _k_md5_cmd=$(_k_md5_cmd)
    md5=$($_k_md5_cmd "$file")
-   rm -f "$file" || return 1
+   _k_fp_rm "$file" || return 1
 
    if [ -d "$finger_path/$md5" ]; then 
        _k_fprint_md5_ctl "del" "" "$finger_path/$md5" "" "$file" || return 1
@@ -224,7 +247,7 @@ _k_fprint_cleanup_do() {
             md5_dest_file=$(echo $info_line | awk -F\| '{print $4}')
             if echo $(_k_file_ext "$(_k_file_name "$md5_dest_file")") | grep "^_k_D_">& /dev/null; then
                 if [ -f "$md5_dest_file" ]; then
-                    rm -f "$md5_dest_file" || return 1
+                    _k_fp_rm "$md5_dest_file" || return 1
                 fi
                 _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                 remain=$(($remain-1))
@@ -244,7 +267,7 @@ _k_fprint_cleanup_do() {
 
             if echo $(_k_file_ext "$(_k_file_name "$md5_dest_file")") | grep "^_k_D_">& /dev/null; then
                 if [ -f "$md5_dest_file" ]; then
-                    rm -f "$md5_dest_file" || return 1
+                    _k_fp_rm "$md5_dest_file" || return 1
                 fi
                 _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                 remain=$(($remain-1))
@@ -263,7 +286,7 @@ _k_fprint_cleanup_do() {
                      _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                      remain=$(($remain-1))
                  elif [ -n "$md5_dest_file" -a -f "$md5_dest_file" ]; then
-                     rm -f "$md5_dest_file"
+                     _k_fp_rm "$md5_dest_file"
                      _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                      remain=$(($remain-1))
                  fi
@@ -285,7 +308,7 @@ _k_fprint_cleanup_do() {
                      _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                      remain=$(($remain-1))
                  elif [ -n "$md5_dest_file" -a -f "$md5_dest_file" ]; then
-                     rm -f "$md5_dest_file"
+                     _k_fp_rm "$md5_dest_file"
                      _k_fprint_md5_ctl "del" "" "$md5path" "" "$md5_dest_file"
                      remain=$(($remain-1))
                  fi
@@ -381,8 +404,8 @@ _k_fprint_md5() {
               echo "$info"
               if [ "$(echo $cmd|awk '{print $1}')" == "rm" ]; then
                   if [ "$(awk -F\| -v dest_file="$file" '{if($4==dest_file||$4=="") printf "same"}' "$md5path/info.txt")" != "same" ]; then
-                      #rm -f "$file" && echo "  $cmd : $file"
-                      mv "$file" ~/.trash && echo "  $cmd : $file"
+                      _k_fp_rm "$file" && echo "  $cmd : $file"
+                      # mv "$file" ~/.trash && echo "  $cmd : $file"
                   fi
               fi
               return 0
