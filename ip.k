@@ -15,8 +15,8 @@ _k_ip_help() {
   echo "$(basename $0) [<opt> [<input>] ]
 
   --help : help
-  -n <ip> : convert IP to number
-  -i <num> : convert number to IP
+  -n <ip> : convert number to IP
+  -i <num> : convert IP to number
   -a <ip> <num> : add number to IP
   -d <ip> <num> : take away the number from IP
   -m <ip> <netmask> : make a network using netmask(ex:255.255.0.0)
