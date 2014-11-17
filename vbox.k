@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.0.14
+#$version$:0.0.15
 # Created at Mon Nov 17 10:05:59 CST 2014
 # Description : vbox
 ########################################################################
@@ -20,6 +20,12 @@ $(basename $0) [<opt> [<input>] ]
 
   --help : help
   --list : show vbox list
+  --create <vm name> <os type> : create new vm
+  --delete <vm name>           : delete vm
+  --state <vm name>            : show vm state
+  --info <vm name>             : show vm information
+  --power <cmd> <vm name>      : power control to vm
+    <cmd> => <on|off|reset|savestate|resume|powerbutton|sleepbutton|state>
    "
    exit 1
 }
@@ -46,6 +52,16 @@ _k_vbox() {
        _k_vbox_help
    elif _k_opt --list 0 0 "${opt[@]}" >& /dev/null; then
        _k_vbox_list
+   elif get_val=$(_k_opt --create 2 0 "${opt[@]}"); then
+       _k_vbox_create $get_val
+   elif get_val=$(_k_opt --delete 1 0 "${opt[@]}"); then
+       _k_vbox_delete $get_val
+   elif get_val=$(_k_opt --state 1 0 "${opt[@]}"); then
+       _k_vbox_state $get_val
+   elif get_val=$(_k_opt --power 2 0 "${opt[@]}"); then
+       _k_vbox_power $get_val
+   elif get_val=$(_k_opt --info 1 0 "${opt[@]}"); then
+       _k_vbox_info $get_val
    fi   
 }
 
