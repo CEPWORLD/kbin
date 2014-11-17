@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.1.8
+#$version$:0.1.13
 # Created at Mon Nov 17 10:05:59 CST 2014
 # Description : 
 ########################################################################
@@ -22,6 +22,10 @@ $(basename $0) [<opt> [<input>] ]
   --iso <file file2...> : rpm source file with iso ( NOT support yet )
   --src <dir dir2 ...>  : rpm source dir
   --extract <rpm file>  : extract rpm file (not install)
+  -ql <pkg>             : show package list
+  -qa                   : queary all
+  -q <pkg>              : queary <pkg>
+  -e <pkg>              : delete (remove) <pkg>
   -C <dir>              : dest dir
   "
   exit 1
@@ -57,8 +61,8 @@ _k_rpm() {
       _k_rpm_check "$get_val" || return 1
    elif get_val=$(_k_opt -q 1 0 "${opt[@]}"); then
       _k_rpm_query "$get_val" || return 1
-   elif get_val=$(_k_opt -qa 1 0 "${opt[@]}"); then
-      _k_rpm_query_all "$get_val" || return 1
+   elif _k_opt -qa 0 0 "${opt[@]}" >& /dev/null; then
+      _k_rpm_query_all || return 1
    elif get_val=$(_k_opt -ql 1 0 "${opt[@]}"); then
       _k_rpm_query_list "$get_val" || return 1
    elif get_val=$(_k_opt -e 1 0 "${opt[@]}"); then
@@ -121,6 +125,16 @@ _k_rpm_check() {
   done
 }
 
+_k_rpm_install_exec() {
+    if _k_os_check ubuntu; then
+         dpkg -i $*
+    elif _k_os_check centos rhel; then
+         rpm -ihv $*
+    elif _k_os_check sles; then
+         zypper in $*
+    fi 
+}
+
 _k_rpm_install () {
   local opts fname ffind new_rpm_file find_rpm_file src_dir rpm_file find_ii new_ii
   rpm_file=$1
@@ -149,7 +163,7 @@ _k_rpm_install () {
       else
            rpm_name=$(rpm -qp --qf '%{name}.%{arch}\n' $rpm_file)
       fi
-      rpm -q $rpm_name >& /dev/null && echo "$rpm_file => Installed" || rpm -ihv $rpm_file
+      _k_rpm_query $rpm_name >& /dev/null && echo "$rpm_file => Installed" || _k_rpm_install_exec $rpm_file
 
   elif [ -d $rpm_file ]; then
       for ii in $(ls $rpm_file/*.rpm); do
@@ -176,7 +190,7 @@ _k_rpm_install () {
           else
                rpm_name=$(rpm -qp --qf '%{name}.%{arch}\n' $ffind)
           fi
-          rpm -q $rpm_name >& /dev/null && echo "$ii => Installed" || rpm -ihv $ffind
+          _k_rpm_query $rpm_name >& /dev/null && echo "$ii => Installed" || _k_rpm_install_exec $ffind
       done
   fi
 }
@@ -184,20 +198,23 @@ _k_rpm_install () {
 _k_rpm_query () {
   if _k_os_check osx; then
     #spctl --list | grep "\.app"
-    ls /Applications
+    ls /Applications | grep "$1" && return 0 || return 1
   elif _k_os_check ubuntu; then
-    dpkg $opt $*
+    dpkg -l | grep "$1" && return 0 || return 1
   else
-    rpm -q $*
+    rpm -q $1 && return 0 || return 1
   fi
 }
 
 _k_rpm_query_all () {
   if _k_os_check osx; then
     #spctl --list | grep "\.app"
+    #pkgutil --packages
     ls /Applications
   elif _k_os_check ubuntu; then
-    dpkg --list $*
+    dpkg -L
+  elif _k_os_check sles; then
+    zypper lr
   else
     rpm -qa 
   fi
@@ -216,7 +233,7 @@ _k_rpm_query_list () {
 
 _k_rpm_del () {
   if _k_os_check ubuntu; then
-    dpkg -L $*
+    dpkg -r $*
   else
     rpm -e $*
   fi

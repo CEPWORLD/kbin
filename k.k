@@ -9,7 +9,7 @@
 # 03/31/2014 upgrade function for using old shell libraries and muerge old commands to KC
 # 05/26/2014 upgrade array in shell to good works
 # 05/29/2014 upgrade to fast working on library loading 
-#$version$:0.2.45
+#$version$:0.2.47
 #################################################################
 # "${@}"    : put arrary
 # ${#@}     : total array num
@@ -203,31 +203,33 @@ _k_load_include() {
 # cmd sample
 _k_os_check() {
   local osname osrelease
-  osname=${@:1:1}
+  #osname=${@:1:1}
   #osrelease=${@:2:1}
-  [ -n "$osname" ] || return 1
-  if [ "$osname" == "centos" -o "$osname" == "rhel" ]; then
-    [ -f /etc/redhat-release ] || return 1
-    if [ "$osname" == "centos" ]; then
-        cat /etc/redhat-release | grep "^CentOS" >& /dev/null && return 0 || return 1
-    else
+  [ "${#}" == "0" ] && return 1
+  for osname in $* ; do
+    if [ "$osname" == "centos" -o "$osname" == "rhel" ]; then
+      [ -f /etc/redhat-release ] || return 1
+      if [ "$osname" == "centos" ]; then
+        cat /etc/redhat-release | grep "^CentOS" >& /dev/null && return 0 
+      else
         return 0
+      fi
+    elif [ "$osname" == "sles" ]; then
+      [ -f /etc/SuSE-release ] && return 0
+#      OS_PATCH=$(cat /etc/SuSE-release | grep PATCHLEVEL | awk '{print $3}')
+    elif [ "$osname" == "osx" ]; then
+      [ "$(uname -s)" == "Darwin" ] && return 0
+    elif [ "$osname" == "android" ]; then
+      [ -f /system/bin/am -a -f /system/bin/pm ] && return 0
+    elif [ "$osname" == "ubuntu" ]; then
+      [ -f /etc/SuSE-release -o -f /etc/redhat-release ] && return 1
+      [ -f /etc/issue ] || return 1
+    else
+      echo "UnknownOS ($osname)" 
+      return 1
     fi
-  elif [ "$osname" == "sles" ]; then
-    [ -f /etc/SuSE-release ] || return 1
-    OS_PATCH=$(cat /etc/SuSE-release | grep PATCHLEVEL | awk '{print $3}')
-  elif [ "$osname" == "osx" ]; then
-    [ "$(uname -s)" == "Darwin" ] || return 1
-  elif [ "$osname" == "android" ]; then
-    [ -f /system/bin/am -a -f /system/bin/pm ] || return 1
-  elif [ "$osname" == "ubuntu" ]; then
-    [ -f /etc/SuSE-release -o /etc/redhat-release ] && return 1
-    [ -f /etc/issue ] || return 1
-  else
-    echo "UnknownOS" 
-    return 1
-  fi
-  return 0
+  done
+  return 1
 }
 
 _k_real_path() {
@@ -501,6 +503,7 @@ export PATH=\${_K_BIN}:\${PATH}
 
 # IF run a shell then run a shell. if load the shell then not running shell. just load
 if [ "$(basename "$(_k_readlink -f "$0")")" == "k.k" ]; then
+[ "$1" == "--help" ] && _k_k_help
 #!/bin/sh
     _k_k "$@" || exit $?
 else
