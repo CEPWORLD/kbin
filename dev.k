@@ -4,18 +4,36 @@ KTAG=".k"
 
 #include k.k
 
+_k_dev_help() {
+  echo "
+  device file manage
+
+  $(basename $0) [<opt> [<input>] ]
+
+  --help : help
+  -u <dev>     : check use <dev> or not 
+  -t <dev>     : show <dev> type
+  "
+  exit
+}
+
 _k_dev() {
-   local cmd rcmd
-   if [ -n "$*" ]; then
-       cmd=$1
-       shift 1
-       if rcmd=$(_k_bin ${FUNCNAME} $cmd); then
-          $rcmd $*
-          return $?
-       else
-          echo "ERR: $rcmd"
-          return 1
-       fi
+   local cmd rcmd opt get_val
+   echo $1 | grep "^-" >& /dev/null || cmd=$1
+   declare -F ${FUNCNAME}_${cmd} >& /dev/null && shift 1
+
+   opt=("$@")
+
+   if _k_opt --help 0 0 "${opt[@]}" >/dev/null; then
+       _k_dev_help
+       exit 0
+   elif get_val=$(_k_opt -u 1 0 "${opt[@]}"); then
+      _k_dev_used $get_val || return 1
+   elif get_val=$(_k_opt -t 1 0 "${opt[@]}"); then
+      _k_dev_block_type $get_val || return 1
+   else
+      echo "Unknown option"
+      exit 1
    fi
 }
 

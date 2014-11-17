@@ -2,9 +2,28 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.2.34
+#$version$:0.2.39
 # Description :
 ########################################################################
+
+_k_rsync_help() {
+  echo "
+  rsync command
+
+  $(basename $0) [<opt> [<input>] ]
+  
+  --help : help
+  $(basename $0) <source> <id>@<dest>:<path>
+  $(basename $0) <id>@<dest>: %same%         : rsync same path of current dir from <dest> to local
+  $(basename $0) %same% <id>@<dest>:         : rsync same path of current dir from local to <dest>
+  "
+  exit
+}
+
+if [ "--help" == "$1" ]; then
+       _k_rsync_help
+       exit 0
+fi
 
 argv=( $* )
 argc=${#argv[*]}

@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.1.21
+#$version$:0.1.22
 # Description : 
 ########################################################################
 KTAG=".k"
@@ -22,6 +22,8 @@ $(basename $0) [<opt> [<input>] ]
   -e <file>    : print file extition
   -n <file>    : print file name
   -s <file>    : print file size
+
+  -i <file>    : print file information
 
   -ppd <file>  : print YYYY/MM format of the file
   -ppdd <file> : print YYYY/MM/DD format of the file
@@ -69,6 +71,9 @@ _k_file() {
    elif file=$(_k_opt -n 1 0 "${opt[@]}"); then
       _k_file_name "$file"
       return $?
+   elif file=$(_k_opt -i 1 0 "${opt[@]}"); then
+      _k_file_info "$file"
+      return $?
    elif file=$(_k_opt -s 1 0 "${opt[@]}"); then
       stat -f "%z" "$file"
       return 0
@@ -89,6 +94,12 @@ _k_file_new_name() {
        break
    done
    echo "$file"
+}
+
+_k_file_info() {
+    [ -n "$1" ] || return 1
+    [ -f "$1" -o -b "$1" -o -L "$1" -o -d "$1" ] && file -s "$1"
+    return 0
 }
 
 _k_file_name() {
