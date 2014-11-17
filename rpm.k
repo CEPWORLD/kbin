@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.1.5
+#$version$:0.1.8
 # Created at Mon Nov 17 10:05:59 CST 2014
 # Description : 
 ########################################################################
@@ -17,7 +17,7 @@ _k_rpm_help() {
 $(basename $0) [<opt> [<input>] ]
 
   --help : help
-  --check <pkg> : check pkg
+  --check <pkg file | pkg name>  : check packages
   --install <rpm file | rpm dir> : Install rpm file
   --iso <file file2...> : rpm source file with iso ( NOT support yet )
   --src <dir dir2 ...>  : rpm source dir
@@ -53,6 +53,8 @@ _k_rpm() {
        _k_rpm_help
    elif get_val=$(_k_opt --extract 1 0 "${opt[@]}"); then
       _k_rpm_extract "$get_val" "$dest_dir" || return 1
+   elif get_val=$(_k_opt --check all 0 "${opt[@]}"); then
+      _k_rpm_check "$get_val" || return 1
    elif get_val=$(_k_opt -q 1 0 "${opt[@]}"); then
       _k_rpm_query "$get_val" || return 1
    elif get_val=$(_k_opt -qa 1 0 "${opt[@]}"); then
@@ -94,6 +96,29 @@ _k_rpm_extract () {
            exit 1
       fi
   fi
+}
+
+_k_rpm_check() {
+  local rpms rpm_name
+  rpms=$*
+  [ -n "$rpms" ] || return 1
+  for ii in $rpms; do
+      if [ -f "$ii" ]; then
+          if file -i $ii | grep "/x-rpm;" >& /dev/null; then
+              rpm_name=$(rpm -qp --qf '%{name}-%{version}.%{arch}\n' $ii)
+              installed_name=$(rpm -q $rpm_name 2> /dev/null) && echo "$ii => Installed ($(echo $installed_name))" || echo "$ii => Not installed"
+          elif file -i $ii | grep "text/plain;" >& /dev/null; then
+              cat $ii | while read line; do
+                  installed_name=$(rpm -q $line 2> /dev/null) && echo "$line => Installed ($(echo $installed_name))" || echo "$line => Not installed"
+              done
+          elif file -i $ii | grep "/x-empty;" >& /dev/null; then
+              name=$(echo $ii | sed "s/\.rpm$//g")
+              installed_name=$(rpm -q $name 2> /dev/null) && echo "$ii => Installed ($(echo $installed_name))" || echo "$ii => Not installed"
+          fi
+      else
+          installed_name=$(rpm -q $ii 2> /dev/null) && echo "$ii => Installed ($(echo $installed_name))" || echo "$ii => Not installed"
+      fi
+  done
 }
 
 _k_rpm_install () {
