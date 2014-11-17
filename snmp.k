@@ -1,7 +1,7 @@
 ########################################################################
 # Copyright (c) CEP Research Institude, All rights reserved. Since 2008
 #    Kage Park <kagepark@cep.kr>
-#$version$:0.0.27
+#$version$:0.0.29
 # Created at Mon Nov 17 10:05:59 CST 2014
 # Description : shmp
 ########################################################################
@@ -10,11 +10,10 @@ KTAG=".k"
 # _kv_  : Kage variable
 
 #include k.k
+#include kmisc.ko
 
 _k_snmp_help() {
-  echo "snmp command
-
-snmp - v$(grep "^#\$version\$:" $0 | awk -F: '{print $2}')
+  echo "snmp - v$(grep "^#\$version\$:" $0 | awk -F: '{print $2}')
 
 $(basename $0) [<opt> [<input>] ]
 
